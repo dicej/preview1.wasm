@@ -19,4 +19,6 @@ default world reactor {
   import environment-preopens: pkg.environment-preopens
   import exit: pkg.exit
   import stderr: pkg.stderr
+  import outbound-http: pkg.outbound-http
+  export inbound-http: pkg.inbound-http
 }
