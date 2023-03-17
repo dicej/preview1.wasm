@@ -166,3 +166,30 @@ export!("outbound-pg:query" outbound_pg_query "postgres" "query"
 
 export!("outbound-pg:execute" outbound_pg_execute "postgres" "execute"
         a0 a1 a2 a3 a4 a5 a6);
+
+export!("outbound-mysql:query" outbound_mysql_query "mysql" "query"
+        a0 a1 a2 a3 a4 a5 a6);
+
+export!("outbound-mysql:execute" outbound_mysql_execute "mysql" "execute"
+        a0 a1 a2 a3 a4 a5 a6);
+
+export!("key-value:open" key_value_open "key-value" "open"
+        a0 a1 a2);
+
+export!("key-value:get" key_value_get "key-value" "get"
+        a0 a1 a2 a3);
+
+export!("key-value:set" key_value_set "key-value" "set"
+        a0 a1 a2 a3 a4 a5);
+
+export!("key-value:delete" key_value_delete "key-value" "delete"
+        a0 a1 a2 a3);
+
+export!("key-value:exists" key_value_exists "key-value" "exists"
+        a0 a1 a2 a3);
+
+export!("key-value:get-keys" key_value_get_keys "key-value" "get-keys"
+        a0 a1);
+
+export!("key-value:close" key_value_close "key-value" "close"
+        a0);
