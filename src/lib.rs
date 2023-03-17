@@ -40,7 +40,30 @@ mod bindings {
         world: "reactor",
         std_feature,
         raw_strings,
-        skip: ["preopens", "get-environment", "http-types", "send-request", "handle-request"],
+        skip: [
+            "preopens",
+            "get-environment",
+            "http-types",
+            "send-request",
+            "handle-request",
+            "open",
+            "get",
+            "set",
+            "delete",
+            "exists",
+            "get-keys",
+            "close",
+            "publish",
+            "incr",
+            "del",
+            "sadd",
+            "smembers",
+            "srem",
+            "execute",
+            "get-config",
+            "query",
+            "handle-message"
+        ],
     });
 }
 

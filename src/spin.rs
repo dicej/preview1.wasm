@@ -17,46 +17,28 @@ unsafe fn dealloc(ptr: i32, size: usize, align: usize) {
     canonical_abi_free(ptr as _, size, align);
 }
 
-#[export_name = "request"]
-unsafe extern "C" fn __wit_bindgen_wasi_outbound_http_request(
-    arg0: i32,
-    arg1: i32,
-    arg2: i32,
-    arg3: i32,
-    arg4: i32,
-    arg5: i32,
-    arg6: i32,
-    arg7: i32,
-    arg8: i32,
-    arg9: i32,
-    arg10: i32,
-) {
-    #[link(wasm_import_module = "outbound-http")]
+#[doc(hidden)]
+#[export_name = "inbound-redis#handle-message"]
+#[allow(non_snake_case)]
+unsafe extern "C" fn inbound_redis_handle_message(arg0: i32, arg1: i32) -> i32 {
+    #[link(wasm_import_module = "__main_module__")]
     extern "C" {
-        #[cfg_attr(target_arch = "wasm32", link_name = "send-request")]
-        fn wit_import(
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-        );
+        #[cfg_attr(target_arch = "wasm32", link_name = "handle-redis-message")]
+        fn wit_import(_: i32, _: i32) -> i32;
     }
-    wit_import(
-        arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10,
-    );
+
+    let mut ret = 0;
+    super::State::with(|state| {
+        ret = state.import_alloc.with_main(|| wit_import(arg0, arg1));
+        Ok(())
+    });
+    ret
 }
 
 #[doc(hidden)]
 #[export_name = "inbound-http#handle-request"]
 #[allow(non_snake_case)]
-unsafe extern "C" fn __export_inbound_http_handle_request(
+unsafe extern "C" fn inbound_http_handle_request(
     arg0: i32,
     arg1: i32,
     arg2: i32,
@@ -98,7 +80,7 @@ unsafe extern "C" fn __export_inbound_http_handle_request(
 #[doc(hidden)]
 #[export_name = "cabi_post_inbound-http#handle-request"]
 #[allow(non_snake_case)]
-unsafe extern "C" fn __post_return_inbound_http_handle_request(arg0: i32) {
+unsafe extern "C" fn post_return_inbound_http_handle_request(arg0: i32) {
     match i32::from(*((arg0 + 4) as *const u8)) {
         0 => (),
         _ => {
@@ -131,3 +113,56 @@ unsafe extern "C" fn __post_return_inbound_http_handle_request(arg0: i32) {
         }
     }
 }
+
+macro_rules! export {
+    ($export_name:literal $name:ident $import_module:literal $import_name:literal $( $arg:ident )*) => {
+        #[export_name = $export_name]
+        unsafe extern "C" fn $name($( $arg: i32 ),*) {
+            #[link(wasm_import_module = $import_module)]
+            extern "C" {
+                #[cfg_attr(target_arch = "wasm32", link_name = $import_name)]
+                fn wit_import($( $arg: i32 ),*);
+            }
+            wit_import($( $arg ),*);
+        }
+    }
+}
+
+export!("wasi-outbound-http:request" wasi_outbound_http_request "http" "send-request"
+        a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10);
+
+export!("spin-config:get-config" config_get_config "config" "get-config"
+        a0 a1 a2);
+
+export!("outbound-redis:publish" outbound_redis_publish "redis" "publish"
+        a0 a1 a2 a3 a4 a5 a6);
+
+export!("outbound-redis:set" outbound_redis_set "redis" "set"
+        a0 a1 a2 a3 a4 a5 a6);
+
+export!("outbound-redis:get" outbound_redis_get "redis" "get"
+        a0 a1 a2 a3 a4);
+
+export!("outbound-redis:incr" outbound_redis_incr "redis" "incr"
+        a0 a1 a2 a3 a4);
+
+export!("outbound-redis:del" outbound_redis_del "redis" "del"
+        a0 a1 a2 a3 a4);
+
+export!("outbound-redis:sadd" outbound_redis_sadd "redis" "sadd"
+        a0 a1 a2 a3 a4 a5 a6);
+
+export!("outbound-redis:smembers" outbound_redis_smembers "redis" "smembers"
+        a0 a1 a2 a3 a4);
+
+export!("outbound-redis:srem" outbound_redis_srem "redis" "srem"
+        a0 a1 a2 a3 a4 a5 a6);
+
+export!("outbound-redis:execute" outbound_redis_execute "redis" "execute"
+        a0 a1 a2 a3 a4 a5 a6);
+
+export!("outbound-pg:query" outbound_pg_query "postgres" "query"
+        a0 a1 a2 a3 a4 a5 a6);
+
+export!("outbound-pg:execute" outbound_pg_execute "postgres" "execute"
+        a0 a1 a2 a3 a4 a5 a6);
