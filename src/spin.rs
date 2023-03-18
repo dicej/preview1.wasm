@@ -48,55 +48,26 @@ fn init() {
     });
 }
 
-#[doc(hidden)]
-#[export_name = "inbound-redis#handle-message"]
-#[allow(non_snake_case)]
-unsafe extern "C" fn inbound_redis_handle_message(arg0: i32, arg1: i32) -> i32 {
-    #[link(wasm_import_module = "__main_module__")]
-    extern "C" {
-        #[cfg_attr(target_arch = "wasm32", link_name = "handle-redis-message")]
-        fn wit_import(_: i32, _: i32) -> i32;
+macro_rules! wrap_export {
+    ($export_name:literal $name:ident $import_name:literal $( $arg:ident )*) => {
+        #[export_name = $export_name]
+        unsafe extern "C" fn $name($( $arg: i32 ),*) -> i32 {
+            #[link(wasm_import_module = "__main_module__")]
+            extern "C" {
+                #[cfg_attr(target_arch = "wasm32", link_name = $import_name)]
+                fn wit_import($( $arg: i32 ),*) -> i32;
+            }
+            init();
+            wit_import($( $arg ),*)
+        }
     }
-
-    init();
-    wit_import(arg0, arg1)
 }
 
-#[doc(hidden)]
-#[export_name = "inbound-http#handle-request"]
-#[allow(non_snake_case)]
-unsafe extern "C" fn inbound_http_handle_request(
-    arg0: i32,
-    arg1: i32,
-    arg2: i32,
-    arg3: i32,
-    arg4: i32,
-    arg5: i32,
-    arg6: i32,
-    arg7: i32,
-    arg8: i32,
-    arg9: i32,
-) -> i32 {
-    #[link(wasm_import_module = "__main_module__")]
-    extern "C" {
-        #[cfg_attr(target_arch = "wasm32", link_name = "handle-http-request")]
-        fn wit_import(
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-            _: i32,
-        ) -> i32;
-    }
+wrap_export!("inbound-redis#handle-message" inbound_redis_handle_message "handle-redis-message"
+             a0 a1);
 
-    init();
-    wit_import(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-}
+wrap_export!("inbound-http#handle-request" inbound_http_handle_request "handle-http-request"
+             a0 a1 a2 a3 a4 a5 a6 a7 a8 a9);
 
 #[doc(hidden)]
 #[export_name = "cabi_post_inbound-http#handle-request"]
@@ -135,7 +106,7 @@ unsafe extern "C" fn post_return_inbound_http_handle_request(arg0: i32) {
     }
 }
 
-macro_rules! export {
+macro_rules! wrap_import {
     ($export_name:literal $name:ident $import_module:literal $import_name:literal $( $arg:ident )*) => {
         #[export_name = $export_name]
         unsafe extern "C" fn $name($( $arg: i32 ),*) {
@@ -152,68 +123,68 @@ macro_rules! export {
     }
 }
 
-export!("wasi-outbound-http:request" wasi_outbound_http_request "http" "send-request"
-        a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10);
+wrap_import!("wasi-outbound-http:request" wasi_outbound_http_request "http" "send-request"
+             a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10);
 
-export!("spin-config:get-config" config_get_config "config" "get-config"
-        a0 a1 a2);
+wrap_import!("spin-config:get-config" config_get_config "config" "get-config"
+             a0 a1 a2);
 
-export!("outbound-redis:publish" outbound_redis_publish "redis" "publish"
-        a0 a1 a2 a3 a4 a5 a6);
+wrap_import!("outbound-redis:publish" outbound_redis_publish "redis" "publish"
+             a0 a1 a2 a3 a4 a5 a6);
 
-export!("outbound-redis:set" outbound_redis_set "redis" "set"
-        a0 a1 a2 a3 a4 a5 a6);
+wrap_import!("outbound-redis:set" outbound_redis_set "redis" "set"
+             a0 a1 a2 a3 a4 a5 a6);
 
-export!("outbound-redis:get" outbound_redis_get "redis" "get"
-        a0 a1 a2 a3 a4);
+wrap_import!("outbound-redis:get" outbound_redis_get "redis" "get"
+             a0 a1 a2 a3 a4);
 
-export!("outbound-redis:incr" outbound_redis_incr "redis" "incr"
-        a0 a1 a2 a3 a4);
+wrap_import!("outbound-redis:incr" outbound_redis_incr "redis" "incr"
+             a0 a1 a2 a3 a4);
 
-export!("outbound-redis:del" outbound_redis_del "redis" "del"
-        a0 a1 a2 a3 a4);
+wrap_import!("outbound-redis:del" outbound_redis_del "redis" "del"
+             a0 a1 a2 a3 a4);
 
-export!("outbound-redis:sadd" outbound_redis_sadd "redis" "sadd"
-        a0 a1 a2 a3 a4 a5 a6);
+wrap_import!("outbound-redis:sadd" outbound_redis_sadd "redis" "sadd"
+             a0 a1 a2 a3 a4 a5 a6);
 
-export!("outbound-redis:smembers" outbound_redis_smembers "redis" "smembers"
-        a0 a1 a2 a3 a4);
+wrap_import!("outbound-redis:smembers" outbound_redis_smembers "redis" "smembers"
+             a0 a1 a2 a3 a4);
 
-export!("outbound-redis:srem" outbound_redis_srem "redis" "srem"
-        a0 a1 a2 a3 a4 a5 a6);
+wrap_import!("outbound-redis:srem" outbound_redis_srem "redis" "srem"
+             a0 a1 a2 a3 a4 a5 a6);
 
-export!("outbound-redis:execute" outbound_redis_execute "redis" "execute"
-        a0 a1 a2 a3 a4 a5 a6);
+wrap_import!("outbound-redis:execute" outbound_redis_execute "redis" "execute"
+             a0 a1 a2 a3 a4 a5 a6);
 
-export!("outbound-pg:query" outbound_pg_query "postgres" "query"
-        a0 a1 a2 a3 a4 a5 a6);
+wrap_import!("outbound-pg:query" outbound_pg_query "postgres" "query"
+             a0 a1 a2 a3 a4 a5 a6);
 
-export!("outbound-pg:execute" outbound_pg_execute "postgres" "execute"
-        a0 a1 a2 a3 a4 a5 a6);
+wrap_import!("outbound-pg:execute" outbound_pg_execute "postgres" "execute"
+             a0 a1 a2 a3 a4 a5 a6);
 
-export!("outbound-mysql:query" outbound_mysql_query "mysql" "query"
-        a0 a1 a2 a3 a4 a5 a6);
+wrap_import!("outbound-mysql:query" outbound_mysql_query "mysql" "query"
+             a0 a1 a2 a3 a4 a5 a6);
 
-export!("outbound-mysql:execute" outbound_mysql_execute "mysql" "execute"
-        a0 a1 a2 a3 a4 a5 a6);
+wrap_import!("outbound-mysql:execute" outbound_mysql_execute "mysql" "execute"
+             a0 a1 a2 a3 a4 a5 a6);
 
-export!("key-value:open" key_value_open "key-value" "open"
-        a0 a1 a2);
+wrap_import!("key-value:open" key_value_open "key-value" "open"
+             a0 a1 a2);
 
-export!("key-value:get" key_value_get "key-value" "get"
-        a0 a1 a2 a3);
+wrap_import!("key-value:get" key_value_get "key-value" "get"
+             a0 a1 a2 a3);
 
-export!("key-value:set" key_value_set "key-value" "set"
-        a0 a1 a2 a3 a4 a5);
+wrap_import!("key-value:set" key_value_set "key-value" "set"
+             a0 a1 a2 a3 a4 a5);
 
-export!("key-value:delete" key_value_delete "key-value" "delete"
-        a0 a1 a2 a3);
+wrap_import!("key-value:delete" key_value_delete "key-value" "delete"
+             a0 a1 a2 a3);
 
-export!("key-value:exists" key_value_exists "key-value" "exists"
-        a0 a1 a2 a3);
+wrap_import!("key-value:exists" key_value_exists "key-value" "exists"
+             a0 a1 a2 a3);
 
-export!("key-value:get-keys" key_value_get_keys "key-value" "get-keys"
-        a0 a1);
+wrap_import!("key-value:get-keys" key_value_get_keys "key-value" "get-keys"
+             a0 a1);
 
-export!("key-value:close" key_value_close "key-value" "close"
-        a0);
+wrap_import!("key-value:close" key_value_close "key-value" "close"
+             a0);
