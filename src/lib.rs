@@ -2538,7 +2538,7 @@ impl State {
                 instance_monotonic_clock: Cell::new(None),
                 instance_wall_clock: Cell::new(None),
                 dotdot: [UnsafeCell::new(b'.'), UnsafeCell::new(b'.')],
-                may_reenter: Cell::new(false),
+                may_reenter: Cell::new(true),
             }));
             &*ret
         };

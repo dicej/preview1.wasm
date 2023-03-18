@@ -1,3 +1,8 @@
+use {
+    crate::{Descriptor, StreamType, Streams},
+    core::{arch::wasm32, cell::Cell},
+};
+
 #[link(wasm_import_module = "__main_module__")]
 extern "C" {
     pub fn canonical_abi_realloc(
@@ -17,6 +22,32 @@ unsafe fn dealloc(ptr: i32, size: usize, align: usize) {
     canonical_abi_free(ptr as _, size, align);
 }
 
+fn init() {
+    super::State::with_mut(|state| {
+        let descriptors = state.descriptors_mut();
+        if descriptors.len() < 3 {
+            wasm32::unreachable()
+        }
+        descriptors[0] = Descriptor::Streams(Streams {
+            input: Cell::new(Some(0)),
+            output: Cell::new(None),
+            type_: StreamType::Unknown,
+        });
+        descriptors[1] = Descriptor::Streams(Streams {
+            input: Cell::new(None),
+            output: Cell::new(Some(1)),
+            type_: StreamType::Unknown,
+        });
+        descriptors[2] = Descriptor::Streams(Streams {
+            input: Cell::new(None),
+            output: Cell::new(Some(2)),
+            type_: StreamType::Unknown,
+        });
+
+        Ok(())
+    });
+}
+
 #[doc(hidden)]
 #[export_name = "inbound-redis#handle-message"]
 #[allow(non_snake_case)]
@@ -27,12 +58,8 @@ unsafe extern "C" fn inbound_redis_handle_message(arg0: i32, arg1: i32) -> i32 {
         fn wit_import(_: i32, _: i32) -> i32;
     }
 
-    let mut ret = 0;
-    super::State::with(|state| {
-        ret = state.import_alloc.with_main(|| wit_import(arg0, arg1));
-        Ok(())
-    });
-    ret
+    init();
+    wit_import(arg0, arg1)
 }
 
 #[doc(hidden)]
@@ -67,14 +94,8 @@ unsafe extern "C" fn inbound_http_handle_request(
         ) -> i32;
     }
 
-    let mut ret = 0;
-    super::State::with(|state| {
-        ret = state
-            .import_alloc
-            .with_main(|| wit_import(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9));
-        Ok(())
-    });
-    ret
+    init();
+    wit_import(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
 }
 
 #[doc(hidden)]
@@ -123,7 +144,10 @@ macro_rules! export {
                 #[cfg_attr(target_arch = "wasm32", link_name = $import_name)]
                 fn wit_import($( $arg: i32 ),*);
             }
-            wit_import($( $arg ),*);
+            super::State::with(|state| {
+                state.import_alloc.with_main(|| wit_import($( $arg ),*));
+                Ok(())
+            });
         }
     }
 }
