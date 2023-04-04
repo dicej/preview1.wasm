@@ -20,4 +20,12 @@ default world reactor {
   import environment: pkg.environment
   import preopens: pkg.preopens
   import exit: pkg.exit
+  import config: pkg.config
+  import postgres: pkg.postgres
+  import mysql: pkg.mysql
+  import redis: pkg.redis
+  import key-value: pkg.key-value
+  import http: pkg.http
+  export inbound-http: pkg.inbound-http
+  export inbound-redis: pkg.inbound-redis
 }
